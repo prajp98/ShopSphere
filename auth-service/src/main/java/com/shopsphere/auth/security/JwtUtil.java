@@ -1,6 +1,6 @@
 package com.shopsphere.auth.security;
 
-import io.jsonwebtoken.*;
+import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.stereotype.Component;
 
@@ -10,23 +10,25 @@ import java.util.Date;
 
 @Component
 public class JwtUtil {
-    private final String SECRET_KEY = "secret";
-    private final long EXPIRATION_TIME = 86400000;
+    private final String SECRET_KEY = "mySecretKeyMustBe32CharsOrLonger!!"; // must be >=32 chars
+    private final long EXPIRATION_TIME = 86400000; // 1 day
+
+    private SecretKey getSigningKey() {
+        return Keys.hmacShaKeyFor(SECRET_KEY.getBytes(StandardCharsets.UTF_8));
+    }
 
     public String generateToken(String username) {
-        SecretKey key = Keys.hmacShaKeyFor(SECRET_KEY.getBytes(StandardCharsets.UTF_8));
-
         return Jwts.builder()
                 .subject(username)
                 .issuedAt(new Date())
                 .expiration(new Date(System.currentTimeMillis() + EXPIRATION_TIME))
-                .signWith(key)
+                .signWith(getSigningKey())
                 .compact();
     }
 
     public String extractUsername(String token) {
-        SecretKey key = Keys.hmacShaKeyFor(SECRET_KEY.getBytes(StandardCharsets.UTF_8));
-        return Jwts.parser().verifyWith(key)
+        return Jwts.parser()
+                .verifyWith(getSigningKey())
                 .build()
                 .parseSignedClaims(token)
                 .getPayload()
@@ -38,11 +40,12 @@ public class JwtUtil {
     }
 
     private boolean isTokenExpired(String token) {
-        SecretKey key = Keys.hmacShaKeyFor(SECRET_KEY.getBytes(StandardCharsets.UTF_8));
-
-        return Jwts.parser().verifyWith(key)
+        return Jwts.parser()
+                .verifyWith(getSigningKey())
                 .build()
                 .parseSignedClaims(token)
-                .getPayload().getExpiration().before(new Date());
+                .getPayload()
+                .getExpiration()
+                .before(new Date());
     }
 }
