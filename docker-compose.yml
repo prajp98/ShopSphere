@@ -1,0 +1,33 @@
+version: '3.8'
+
+services:
+  cart-db:
+    image: postgres:15
+    container_name: cart-db
+    environment:
+      POSTGRES_DB: cartdb
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+    ports:
+      - "5434:5432"
+    networks:
+      - shopnet
+
+  cart-service:
+    build: ./cart-service
+    container_name: cart-service
+    ports:
+      - "8083:8083"
+    depends_on:
+      - cart-db
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://cart-db:5432/cartdb
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: password
+    networks:
+      - shopnet
+
+networks:
+  shopnet:
+    driver: bridge
+
