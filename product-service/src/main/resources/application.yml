@@ -1,0 +1,22 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://product-db:5432/productdb
+    username: postgres
+    password: password
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: false
+
+  application:
+    name: product-service
+
+server:
+  port: 8082
+networks:
+  shopnet:
+    driver: bridge
