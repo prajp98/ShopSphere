@@ -10,7 +10,7 @@ import java.util.Date;
 
 @Component
 public class JwtUtil {
-    private final String SECRET_KEY = "mySecretKeyMustBe32CharsOrLonger!!"; // must be >=32 chars
+    private final String SECRET_KEY = "verysecureverysecureverysecure1234!!"; // must be >=32 chars
     private final long EXPIRATION_TIME = 86400000; // 1 day
 
     private SecretKey getSigningKey() {
