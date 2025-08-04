@@ -66,7 +66,34 @@ services:
       - product-service
     networks:
       - shopnet
+  cart-service:
+    build:
+      context: ./cart-service
+    ports:
+      - "8083:8083"
+    depends_on:
+      - postgres-cart
+    networks:
+      - backend
+
+  postgres-cart:
+    image: postgres:15
+    restart: always
+    environment:
+      POSTGRES_DB: cartdb
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5435:5432"  # Changed host port to avoid conflict
+    volumes:
+      - cart_pgdata:/var/lib/postgresql/data
+    networks:
+      - backend
+
+volumes:
+  cart_pgdata:
 
 networks:
+  backend:
   shopnet:
     driver: bridge
