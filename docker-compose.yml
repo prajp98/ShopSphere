@@ -1,6 +1,8 @@
 version: '3.8'
 
 services:
+
+  # PostgreSQL for auth
   postgres-auth:
     image: postgres:15
     container_name: postgres-auth
@@ -28,6 +30,7 @@ services:
     networks:
       - shopnet
 
+  # PostgreSQL for product
   postgres-product:
     image: postgres:15
     container_name: postgres-product
@@ -55,6 +58,37 @@ services:
     networks:
       - shopnet
 
+  # PostgreSQL for cart
+  postgres-cart:
+    image: postgres:15
+    container_name: postgres-cart
+    environment:
+      POSTGRES_DB: cartdb
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+    ports:
+      - "5435:5432"
+    volumes:
+      - cart_pgdata:/var/lib/postgresql/data
+    networks:
+      - shopnet
+
+  cart-service:
+    build:
+      context: ./cart-service
+    container_name: cart-service
+    depends_on:
+      - postgres-cart
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-cart:5432/cartdb
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: password
+    ports:
+      - "8083:8083"
+    networks:
+      - shopnet
+
+  # Gateway
   gateway-service:
     build:
       context: ./gateway-service
@@ -64,36 +98,13 @@ services:
     depends_on:
       - auth-service
       - product-service
+      - cart-service
     networks:
       - shopnet
-  cart-service:
-    build:
-      context: ./cart-service
-    ports:
-      - "8083:8083"
-    depends_on:
-      - postgres-cart
-    networks:
-      - backend
 
-  postgres-cart:
-    image: postgres:15
-    restart: always
-    environment:
-      POSTGRES_DB: cartdb
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-    ports:
-      - "5435:5432"  # Changed host port to avoid conflict
-    volumes:
-      - cart_pgdata:/var/lib/postgresql/data
-    networks:
-      - backend
+networks:
+  shopnet:
+    driver: bridge
 
 volumes:
   cart_pgdata:
-
-networks:
-  backend:
-  shopnet:
-    driver: bridge

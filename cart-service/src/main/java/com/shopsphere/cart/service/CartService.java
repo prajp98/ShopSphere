@@ -1,9 +1,8 @@
 package com.shopsphere.cart.service;
 
 import com.shopsphere.cart.entity.CartItem;
-import com.shopsphere.cart.repository.CartItemRepository;
-import jakarta.persistence.EntityNotFoundException;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.shopsphere.cart.repository.CartRepository;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -11,34 +10,34 @@ import java.util.List;
 @Service
 public class CartService {
 
-    @Autowired
-    private CartItemRepository cartRepo;
+    private final CartRepository cartRepository;
+
+    public CartService(CartRepository cartRepository) {
+        this.cartRepository = cartRepository;
+    }
 
     public List<CartItem> getCartItemsByUser(Long userId) {
-        return cartRepo.findByUserId(userId);
+        return cartRepository.findByUserId(userId);
     }
 
     public CartItem addToCart(CartItem item) {
-        return cartRepo.findByUserIdAndProductId(item.getUserId(), item.getProductId())
-                .map(existing -> {
-                    existing.setQuantity(existing.getQuantity() + item.getQuantity());
-                    return cartRepo.save(existing);
-                })
-                .orElse(cartRepo.save(item));
+        try {
+            return cartRepository.save(item);
+        } catch (DataIntegrityViolationException ex) {
+            throw new IllegalArgumentException("Item already exists in cart or violates constraints");
+        }
     }
 
     public CartItem updateQuantity(CartItem item) {
-        return cartRepo.findByUserIdAndProductId(item.getUserId(), item.getProductId())
-                .map(existing -> {
-                    existing.setQuantity(item.getQuantity());
-                    return cartRepo.save(existing);
-                })
-                .orElseThrow(() -> new EntityNotFoundException("Cart item not found for update"));
+        CartItem existingItem = cartRepository.findByUserIdAndProductId(item.getUserId(), item.getProductId())
+                .orElseThrow(() -> new IllegalArgumentException("Cart item not found for update"));
+
+        existingItem.setQuantity(item.getQuantity());
+
+        return cartRepository.save(existingItem); // now updating the correct item by ID
     }
 
     public void removeFromCart(Long userId, Long productId) {
-        CartItem item = cartRepo.findByUserIdAndProductId(userId, productId)
-                .orElseThrow(() -> new EntityNotFoundException("Cart item not found for deletion"));
-        cartRepo.delete(item);
+        cartRepository.deleteByUserIdAndProductId(userId, productId);
     }
 }
