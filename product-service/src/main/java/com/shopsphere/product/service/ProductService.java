@@ -24,11 +24,17 @@ public class ProductService {
     }
 
     public Product create(Product product) {
+        if (repo.existsByName(product.getName())) {
+            throw new IllegalArgumentException("Product name already exists: " + product.getName());
+        }
         return repo.save(product);
     }
 
     public Product update(Long id, Product product) {
         Product existing = getById(id);
+        if (!existing.getName().equals(product.getName()) && repo.existsByName(product.getName())) {
+            throw new IllegalArgumentException("Another product with this name exists: " + product.getName());
+        }
         existing.setName(product.getName());
         existing.setDescription(product.getDescription());
         existing.setPrice(product.getPrice());
