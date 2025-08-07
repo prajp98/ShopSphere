@@ -1,5 +1,6 @@
 package com.shopsphere.auth.security;
 
+import com.shopsphere.auth.entity.Role;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.stereotype.Component;
@@ -7,6 +8,7 @@ import org.springframework.stereotype.Component;
 import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
+import java.util.List;
 
 @Component
 public class JwtUtil {
@@ -17,14 +19,20 @@ public class JwtUtil {
         return Keys.hmacShaKeyFor(SECRET_KEY.getBytes(StandardCharsets.UTF_8));
     }
 
-    public String generateToken(String username) {
+    public String generateToken(Long userId, String username, Role role) {
+        if (role == null) {
+            role = Role.USER;
+        }
         return Jwts.builder()
-                .subject(username)
+                .subject(String.valueOf(userId))
+                .claim("username", username)
+                .claim("role", role)
                 .issuedAt(new Date())
                 .expiration(new Date(System.currentTimeMillis() + EXPIRATION_TIME))
                 .signWith(getSigningKey())
                 .compact();
     }
+
 
     public String extractUsername(String token) {
         return Jwts.parser()

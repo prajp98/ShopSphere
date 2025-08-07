@@ -14,21 +14,14 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Setter
+    @Getter
     private String username;
+    @Setter
+    @Getter
     private String password;
-    private String role; // USER, ADMIN
-    public String getUsername() {
-        return username;
-    }
-    public String getPassword() {
-        return password;
-    }
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private Role role;
 
-    public void setUsername(String username) {
-        this.username = username;
-    }
-
-    public void setPassword(String password) {
-        this.password = password;
-    }
 }

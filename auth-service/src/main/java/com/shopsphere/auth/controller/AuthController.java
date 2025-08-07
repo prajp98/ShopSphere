@@ -1,5 +1,6 @@
 package com.shopsphere.auth.controller;
 
+import com.shopsphere.auth.entity.Role;
 import com.shopsphere.auth.entity.User;
 import com.shopsphere.auth.repository.UserRepository;
 import com.shopsphere.auth.security.JwtUtil;
@@ -26,6 +27,9 @@ public class AuthController {
     @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody User user) {
         user.setPassword(passwordEncoder.encode(user.getPassword()));
+        if (user.getRole() == null) {
+            user.setRole(Role.USER); // Set default
+        }
         userRepository.save(user);
         return ResponseEntity.ok("User registered successfully");
     }
@@ -34,7 +38,7 @@ public class AuthController {
     public ResponseEntity<?> login(@RequestBody Map<String, String> body) {
         User user = userRepository.findByUsername(body.get("username")).orElseThrow();
         if (passwordEncoder.matches(body.get("password"), user.getPassword())) {
-            String token = jwtUtil.generateToken(user.getUsername());
+            String token = jwtUtil.generateToken(user.getId(), user.getUsername(), user.getRole());
             return ResponseEntity.ok(Map.of("token", token));
         } else {
             return ResponseEntity.status(401).body("Invalid credentials");
