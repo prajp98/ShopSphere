@@ -1,7 +1,6 @@
 version: '3.8'
 
 services:
-
   # PostgreSQL for auth
   postgres-auth:
     image: postgres:15
@@ -88,6 +87,36 @@ services:
     networks:
       - shopnet
 
+  # PostgreSQL for inventory
+  postgres-inventory:
+    image: postgres:15
+    container_name: postgres-inventory
+    environment:
+      POSTGRES_DB: inventorydb
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+    ports:
+      - "5436:5432"
+    volumes:
+      - inventory_pgdata:/var/lib/postgresql/data
+    networks:
+      - shopnet
+
+  inventory-service:
+    build:
+      context: ./inventory-service
+    container_name: inventory-service
+    depends_on:
+      - postgres-inventory
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-inventory:5432/inventorydb
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: password
+    ports:
+      - "8084:8084"
+    networks:
+      - shopnet
+
   # Gateway
   gateway-service:
     build:
@@ -99,6 +128,7 @@ services:
       - auth-service
       - product-service
       - cart-service
+      - inventory-service
     networks:
       - shopnet
 
@@ -108,3 +138,4 @@ networks:
 
 volumes:
   cart_pgdata:
+  inventory_pgdata:
