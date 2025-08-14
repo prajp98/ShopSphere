@@ -1,4 +1,4 @@
-package com.shopsphere.inventory.security;
+package com.shopsphere.order.security;
 
 public enum Role {
     USER,

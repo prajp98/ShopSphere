@@ -1,9 +1,13 @@
+server:
+  port: 8082
+
 spring:
+  application:
+    name: product-service
   datasource:
-    url: jdbc:postgresql://product-db:5432/productdb
+    url: jdbc:postgresql://postgres-order:5432/productdb
     username: postgres
     password: password
-
   jpa:
     hibernate:
       ddl-auto: update
@@ -11,12 +15,3 @@ spring:
     properties:
       hibernate:
         format_sql: false
-
-  application:
-    name: product-service
-
-server:
-  port: 8082
-networks:
-  shopnet:
-    driver: bridge

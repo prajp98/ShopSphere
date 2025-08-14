@@ -132,6 +132,38 @@ services:
     networks:
       - shopnet
 
+  # PostgreSQL for orders
+  postgres-order:
+    image: postgres:15
+    container_name: postgres-order
+    environment:
+      POSTGRES_DB: orderdb
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+    ports:
+      - "5437:5432"
+    networks:
+      - shopnet
+
+  order-service:
+    build:
+      context: ./order-service
+    container_name: order-service
+    depends_on:
+      - postgres-order
+      - inventory-service
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-order:5432/orderdb
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: password
+      INVENTORY_BASE_URL: http://inventory-service:8087
+      JWT_SECRET: verysecureverysecureverysecure1234!!
+    ports:
+      - "8086:8086"
+    networks:
+      - shopnet
+
+
 networks:
   shopnet:
     driver: bridge

@@ -2,20 +2,19 @@ package com.shopsphere.product.controller;
 
 import com.shopsphere.product.entity.Product;
 import com.shopsphere.product.service.ProductService;
-import jakarta.persistence.EntityNotFoundException;
-import org.springframework.beans.factory.annotation.Autowired;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.net.URI;
 import java.util.List;
 
 @RestController
 @RequestMapping("/products")
 public class ProductController {
-
-    @Autowired
-    private ProductService service;
+    private final ProductService service;
+    public ProductController(ProductService service){ this.service = service; }
 
     @GetMapping
     public ResponseEntity<List<Product>> getAll() {
@@ -27,35 +26,32 @@ public class ProductController {
         return ResponseEntity.ok(service.getById(id));
     }
 
+    // Bulk fetch for Cart/Order
+    @GetMapping("/bulk")
+    public ResponseEntity<List<Product>> getByIds(@RequestParam List<Long> ids) {
+        return ResponseEntity.ok(service.getByIds(ids));
+    }
+
+    // ADMIN only
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<?> create(@RequestBody Product product) {
-        try {
-            Product saved = service.create(product);
-            return ResponseEntity.status(201).body(saved);
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(400).body(e.getMessage());
-        }
+    public ResponseEntity<Product> create(@Valid @RequestBody Product product) {
+        Product saved = service.create(product);
+        return ResponseEntity.created(URI.create("/products/" + saved.getId())).body(saved);
     }
 
+    // ADMIN only
+    @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<?> update(@PathVariable Long id, @RequestBody Product product) {
-        try {
-            return ResponseEntity.ok(service.update(id, product));
-        } catch (EntityNotFoundException e) {
-            return ResponseEntity.status(404).body(e.getMessage());
-        }
+    public ResponseEntity<Product> update(@PathVariable Long id, @Valid @RequestBody Product product) {
+        return ResponseEntity.ok(service.update(id, product));
     }
 
-    @DeleteMapping("/{id}")
+    // ADMIN only
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<?> delete(@PathVariable Long id) {
-        try {
-            service.delete(id);
-            return ResponseEntity.noContent().build();
-        } catch (EntityNotFoundException e) {
-            return ResponseEntity.status(404).body(e.getMessage());
-        }
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> delete(@PathVariable Long id) {
+        service.delete(id);
+        return ResponseEntity.noContent().build();
     }
 }

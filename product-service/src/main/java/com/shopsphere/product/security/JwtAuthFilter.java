@@ -38,14 +38,15 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             Claims claims = Jwts.parser().verifyWith(key).build().parseSignedClaims(token).getPayload();
 
             String username = claims.get("username", String.class);
-            String role = claims.get("role", String.class);
+            String role = claims.get("role", String.class );
             if (role == null || role.isEmpty()) {
                 ((HttpServletResponse) response).sendError(HttpServletResponse.SC_FORBIDDEN, "Roles missing in token");
                 return;
             }
             UsernamePasswordAuthenticationToken auth =
                     new UsernamePasswordAuthenticationToken(username, null,
-                            List.of(new SimpleGrantedAuthority("ROLE_"+role)));
+                            List.of(new SimpleGrantedAuthority("ROLE_" + role)));
+
             SecurityContextHolder.getContext().setAuthentication(auth);
 
             chain.doFilter(request, response);

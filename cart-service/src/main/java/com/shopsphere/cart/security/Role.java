@@ -1,4 +1,4 @@
-package com.shopsphere.inventory.security;
+package com.shopsphere.cart.security;
 
 public enum Role {
     USER,

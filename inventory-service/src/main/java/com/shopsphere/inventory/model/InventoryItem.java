@@ -1,34 +1,25 @@
-package com.shopsphere.inventory.model;
+package com.shopsphere.inventory.entity;
 
 import jakarta.persistence.*;
-import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.NotBlank;
 import lombok.*;
 
 @Entity
-@Getter
-@Setter
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder
-@Table(name = "inventory_item",
-        uniqueConstraints = @UniqueConstraint(columnNames = {"sku"}))
+@Table(name = "inventory", uniqueConstraints = @UniqueConstraint(columnNames = "product_id"))
+@Data @NoArgsConstructor @AllArgsConstructor @Builder
 public class InventoryItem {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @NotBlank
-    private String sku;          // unique product code
+    @Column(name = "product_id", nullable = false, unique = true)
+    private Long productId;
 
-    @NotBlank
-    private String name;
+    @Column(nullable = false)
+    private Integer available; // on-hand available
 
-    private String description;
+    @Column(nullable = false)
+    private Integer reserved;  // reserved (pending orders)
 
-    @Min(0)
-    private Integer quantity;    // available stock
-
-    private String location;     // warehouse location, optional
+    public int total() {
+        return available + reserved;
+    }
 }

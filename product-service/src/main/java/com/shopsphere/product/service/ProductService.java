@@ -1,51 +1,54 @@
 package com.shopsphere.product.service;
 
 import com.shopsphere.product.entity.Product;
+import com.shopsphere.product.exception.DuplicateProductNameException;
 import com.shopsphere.product.repository.ProductRepository;
 import jakarta.persistence.EntityNotFoundException;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
 @Service
 public class ProductService {
+    private final ProductRepository repo;
+    public ProductService(ProductRepository repo){ this.repo = repo; }
 
-    @Autowired
-    private ProductRepository repo;
-
-    public List<Product> getAll() {
-        return repo.findAll();
-    }
+    public List<Product> getAll() { return repo.findAll(); }
 
     public Product getById(Long id) {
-        return repo.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Product not found: " + id));
+        return repo.findById(id).orElseThrow(() -> new EntityNotFoundException("Product not found: " + id));
     }
 
-    public Product create(Product product) {
-        if (repo.existsByName(product.getName())) {
-            throw new IllegalArgumentException("Product name already exists: " + product.getName());
-        }
-        return repo.save(product);
+    public List<Product> getByIds(List<Long> ids) {
+        List<Product> list = repo.findAllById(ids);
+        if (list.size() != ids.size()) throw new EntityNotFoundException("Some products not found");
+        return list;
     }
 
-    public Product update(Long id, Product product) {
+    @Transactional
+    public Product create(Product p) {
+        if (repo.existsByNameIgnoreCase(p.getName()))
+            throw new DuplicateProductNameException(p.getName());
+        return repo.save(p);
+    }
+
+    @Transactional
+    public Product update(Long id, Product p) {
         Product existing = getById(id);
-        if (!existing.getName().equals(product.getName()) && repo.existsByName(product.getName())) {
-            throw new IllegalArgumentException("Another product with this name exists: " + product.getName());
-        }
-        existing.setName(product.getName());
-        existing.setDescription(product.getDescription());
-        existing.setPrice(product.getPrice());
-        existing.setCategory(product.getCategory());
-        existing.setImageUrl(product.getImageUrl());
-        existing.setStock(product.getStock());
+        if (!existing.getName().equalsIgnoreCase(p.getName()) && repo.existsByNameIgnoreCase(p.getName()))
+            throw new DuplicateProductNameException(p.getName());
+        existing.setName(p.getName());
+        existing.setDescription(p.getDescription());
+        existing.setPrice(p.getPrice());
+        existing.setCategory(p.getCategory());
+        existing.setImageUrl(p.getImageUrl());
+        existing.setStock(p.getStock()); // optional: product’s “default” stock field (not authoritative)
         return repo.save(existing);
     }
 
     public void delete(Long id) {
-        Product product = getById(id);
-        repo.delete(product);
+        Product p = getById(id);
+        repo.delete(p);
     }
 }

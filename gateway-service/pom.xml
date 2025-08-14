@@ -12,11 +12,6 @@
     <artifactId>gateway-service</artifactId>
     <dependencies>
         <!-- Spring Cloud Gateway -->
-        <dependency>
-            <groupId>org.springframework.cloud</groupId>
-            <artifactId>spring-cloud-starter-gateway</artifactId>
-            <version>4.0.9</version>
-        </dependency>
 
         <!-- WebFlux (for Gateway) -->
         <dependency>
