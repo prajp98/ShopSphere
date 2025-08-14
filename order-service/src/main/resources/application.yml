@@ -1,0 +1,21 @@
+server:
+  port: 8086
+
+spring:
+  application:
+    name: order-service
+  datasource:
+    url: jdbc:postgresql://postgres-order:5432/orderdb
+    username: postgres
+    password: password
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+
+endpoints:
+  product: http://product-service:8082
+  inventory: http://inventory-service:8084
+
+jwt:
+  secret: verysecureverysecureverysecure1234!!
